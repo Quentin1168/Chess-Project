@@ -41,6 +41,11 @@ class Piece():
         self.type = type
         self.colour = colour
         self.untouched = True
+        if type == "Entity":
+            self.piece = False
+        else:
+            self.piece = True
+
 
     def get_position(self):
         return self.position
@@ -59,6 +64,9 @@ class Piece():
 
     def set_untouched(self):
         self.untoouched = False
+    
+    def is_piece(self):
+        return self.piece
     
     def __repr__(self):
         return "Piece(" + str(self.position) + " ," + self.type + " ," + self.colour + " )"
@@ -209,23 +217,23 @@ class ChessBoard:
                 possible.append((coords[0], coords[1]-1))
 
                 #Check if the future coords are out of bounds or not
-                if 0 > coords[0]+1 > 9 and 0 > coords[1]-1 > 9 and \
-                    self.get_piece_from_coords((coords[0]-1, coords[1]-1)).get_colour() != piece.get_colour():
-                    possible.append((coords[0]+1, coords[1]-1))
-                elif 0 > coords[0]-1 > 9 and 0 > coords[1]-1 > 9 and \
-                    self.get_piece_from_coords((coords[0]-1, coords[1]-1)).get_colour() != piece.get_colour():
-                    possible.append((coords[0]-1, coords[1]-1))
+                if 0 < coords[0]+1 < 9 and 0 < coords[1]-1 < 9 and self.get_piece_from_coords((coords[0]+1, coords[1]-1)).is_piece():
+                    if team[self.get_piece_from_coords((coords[0]+1, coords[1]-1)).get_colour()] == piece.get_colour():
+                        possible.append((coords[0]+1, coords[1]-1))
+                if 0 < coords[0]-1 < 9 and 0 < coords[1]-1 < 9 and self.get_piece_from_coords((coords[0]-1, coords[1]-1)).is_piece():
+                    if team[self.get_piece_from_coords((coords[0]-1, coords[1]-1)).get_colour()] == piece.get_colour():
+                        possible.append((coords[0]-1, coords[1]-1))
             else:
                 if piece.get_untouched() == True:
                     possible.append((coords[0], coords[1]+2))
                 possible.append((coords[0], coords[1]+1))
 
-                if 0 > coords[0]+1 > 9 and 0 > coords[1]+1 > 9 and \
-                    team[self.get_piece_from_coords((coords[0]+1, coords[1]+1)).get_colour()] != team[piece.get_colour()]:
-                    possible.append((coords[0]+1, coords[1]+1))
-                elif 0 > coords[0]-1 > 9 and 0 > coords[1]+1 > 9 and \
-                    team[self.get_piece_from_coords((coords[0]-1, coords[1]+1)).get_colour()] != team[piece.get_colour()]:
-                    possible.append((coords[0]-1, coords[1]+1))
+                if 0 < coords[0]+1 < 9 and 0 < coords[1]+1 < 9 and self.get_piece_from_coords((coords[0]+1, coords[1]+1)).is_piece():
+                    if team[self.get_piece_from_coords((coords[0]+1, coords[1]+1)).get_colour()] == piece.get_colour():
+                        possible.append((coords[0]+1, coords[1]+1))
+                if 0 < coords[0]-1 < 9 and 0 < coords[1]+1 < 9 and self.get_piece_from_coords((coords[0]-1, coords[1]+1)).is_piece():
+                    if team[self.get_piece_from_coords((coords[0]-1, coords[1]+1)).get_colour()] == piece.get_colour():
+                        possible.append((coords[0]-1, coords[1]+1))
 
 
         if len(possible) != 0:
