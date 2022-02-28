@@ -144,7 +144,7 @@ class ChessBoard:
     Parameters: coords -> the coordinates in tuple form
     Returns: Entity or Piece object
     """
-    def get_piece_from_coords(self, coords):
+    def get_coords(self, coords):
         x = coords[0]
         y = coords[1]
 
@@ -174,7 +174,7 @@ class ChessBoard:
     Parameters: piece -> A Piece Object of the Chess board
     Returns: a list of the possible positions that the piece can go.
     """
-    def get_possible_positions(self, piece):
+    def get_positions(self, piece):
         type = piece.get_type()
         coords = piece.get_position()
         possible = []
@@ -212,36 +212,36 @@ class ChessBoard:
 
         elif type == "pawn":
             if self.team != piece.get_colour():
-                if self.get_piece_from_coords((coords[0], coords[1]-1).piece == False:
+                if self.get_coords((coords[0], coords[1]-1).piece == False:
                     possible.append((coords[0], coords[1]-1))
                     if piece.get_untouched() == True:
                         possible.append((coords[0], coords[1]-2))
 
                 #Check if the future coords are out of bounds or not
-                if 0 < coords[0]+1 < 9 and 0 < coords[1]-1 < 9 and self.get_piece_from_coords((coords[0]+1, coords[1]-1)).is_piece():
-                    if team[self.get_piece_from_coords((coords[0]+1, coords[1]-1)).get_colour()] == piece.get_colour():
+                if 0 < coords[0]+1 < 9 and 0 < coords[1]-1 < 9 and self.get_coords((coords[0]+1, coords[1]-1)).is_piece():
+                    if team[self.get_coords((coords[0]+1, coords[1]-1)).get_colour()] == piece.get_colour():
                         possible.append((coords[0]+1, coords[1]-1))
-                if 0 < coords[0]-1 < 9 and 0 < coords[1]-1 < 9 and self.get_piece_from_coords((coords[0]-1, coords[1]-1)).is_piece():
-                    if team[self.get_piece_from_coords((coords[0]-1, coords[1]-1)).get_colour()] == piece.get_colour():
+                if 0 < coords[0]-1 < 9 and 0 < coords[1]-1 < 9 and self.get_coords((coords[0]-1, coords[1]-1)).is_piece():
+                    if team[self.get_coords((coords[0]-1, coords[1]-1)).get_colour()] == piece.get_colour():
                         possible.append((coords[0]-1, coords[1]-1))
             else:
-                if self.get_piece_from_coords((coords[0], coords[1]+1)).piece == False:
+                if self.get_coords((coords[0], coords[1]+1)).piece == False:
                     possible.append((coords[0], coords[1]+1))
                     if piece.get_untouched() == True:
                         possible.append((coords[0], coords[1]+2))
 
-                if 0 < coords[0]+1 < 9 and 0 < coords[1]+1 < 9 and self.get_piece_from_coords((coords[0]+1, coords[1]+1)).is_piece():
-                    if team[self.get_piece_from_coords((coords[0]+1, coords[1]+1)).get_colour()] == piece.get_colour():
+                if 0 < coords[0]+1 < 9 and 0 < coords[1]+1 < 9 and self.get_coords((coords[0]+1, coords[1]+1)).is_piece():
+                    if team[self.get_coords((coords[0]+1, coords[1]+1)).get_colour()] == piece.get_colour():
                         possible.append((coords[0]+1, coords[1]+1))
-                if 0 < coords[0]-1 < 9 and 0 < coords[1]+1 < 9 and self.get_piece_from_coords((coords[0]-1, coords[1]+1)).is_piece():
-                    if team[self.get_piece_from_coords((coords[0]-1, coords[1]+1)).get_colour()] == piece.get_colour():
+                if 0 < coords[0]-1 < 9 and 0 < coords[1]+1 < 9 and self.get_coords((coords[0]-1, coords[1]+1)).is_piece():
+                    if team[self.get_coords((coords[0]-1, coords[1]+1)).get_colour()] == piece.get_colour():
                         possible.append((coords[0]-1, coords[1]+1))
 
 
         if len(possible) != 0:
             pruned_possible = []
             for i in possible:
-                if 0 < i[0] < 9 and 0 < i[1] < 9 and self.get_piece_from_coords(i).get_colour() != piece.get_colour():
+                if 0 < i[0] < 9 and 0 < i[1] < 9 and self.get_coords(i).get_colour() != piece.get_colour():
                     pruned_possible.append(i)
             possible = pruned_possible
         return possible
@@ -255,17 +255,17 @@ class ChessBoard:
         castling_flag_right = True
         if self.team == "white":
             for i in [2,3,4]:
-                if self.get_piece_from_coords((i,8)).get_type() != "Entity":
+                if self.get_coords((i,8)).get_type() != "Entity":
                     castling_flag_left = False
             for i in [7,8]:
-                if self.get_piece_from_coords((i,8)).get_type() != "Entity":
+                if self.get_coords((i,8)).get_type() != "Entity":
                     castling_flag_right = False
         else:
             for i in [2,3]:
-                if self.get_piece_from_coords((i,8)).get_type() != "Entity":
+                if self.get_coords((i,8)).get_type() != "Entity":
                     castling_flag_left = False
             for i in [5,7,8]:
-                if self.get_piece_from_coords((i,8)).get_type() != "Entity":
+                if self.get_coords((i,8)).get_type() != "Entity":
                     castling_flag_right = False
         if castling_flag_left == True:
             possible.append((coords[0]+2, coords[1]))
@@ -279,22 +279,22 @@ class ChessBoard:
         coords = piece.get_position()
         x = coords[0]
         y = coords[1]
-        while self.get_piece_from_coords(coords).get_colour() != self.team\
+        while self.get_coords(coords).get_colour() != self.team\
                  and x < 9:
             x += 1
             possible.append((x, coords[1]))
         x = coords[0]
-        while self.get_piece_from_coords(coords).get_colour() != self.team\
+        while self.get_coords(coords).get_colour() != self.team\
                 and x > 0:
             x -= 1
             possible.append((x, coords[1]))
         x = coords[0]
-        while self.get_piece_from_coords(coords).get_colour() != self.team\
+        while self.get_coords(coords).get_colour() != self.team\
                 and y < 9:
             y += 1
             possible.append((coords[0], y))
         y = coords[1]
-        while self.get_piece_from_coords(coords).get_colour() != self.team\
+        while self.get_coords(coords).get_colour() != self.team\
                 and y > 0:
             y -= 1
             possible.append((coords[0], y))
@@ -306,28 +306,28 @@ class ChessBoard:
         coords = piece.get_position()
         x = coords[0]
         y = coords[1]
-        while self.get_piece_from_coords(coords).get_colour() != self.team\
+        while self.get_coords(coords).get_colour() != self.team\
                  and x < 9 and y < 9:
             x += 1
             y += 1
             possible.append((x,y))
         x = coords[0]
         y = coords[1]
-        while self.get_piece_from_coords(coords).get_colour() != self.team\
+        while self.get_coords(coords).get_colour() != self.team\
                 and x < 9 and y > 0:
             x += 1
             y -= 1
             possible.append((x, y))
         x = coords[0]
         y = coords[1]
-        while self.get_piece_from_coords(coords).get_colour() != self.team\
+        while self.get_coords(coords).get_colour() != self.team\
                 and x > 0 and y < 9:
             x -= 1
             y += 1
             possible.append((x, y))
         x = coords[0]
         y = coords[1]
-        while self.get_piece_from_coords(coords).get_colour() != self.team\
+        while self.get_coords(coords).get_colour() != self.team\
                 and x > 0 and y > 0:
             x -= 1
             y -= 1
@@ -335,52 +335,70 @@ class ChessBoard:
 
         return possible
 
-    def move_piece(self, piece, coords, board):
+    def move_piece(self, piece, coords):
         piece.set_untouched()
         if piece.get_type() == "king":
             if piece.get_position()[0] - coords[0] < -1:
-                index1 = board.index(self.get_piece_from_coords((coords[0]-1, coords[1])))
-                index2 = board.index(self.get_piece_from_coords((1,1)))
-                self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
+                index1 = self.board.index(self.get_coords((coords[0]-1, coords[1])))
+                index2 = self.board.index(self.get_coords((1,1)))
+                self.self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
             elif piece.get_position()[0] - coords[0] > 1:
-                index1 = board.index(self.get_piece_from_coords((coords[0]+1, coords[1])))
-                index2 = board.index(self.get_piece_from_coords((8,1)))
+                index1 = self.board.index(self.get_coords((coords[0]+1, coords[1])))
+                index2 = self.board.index(self.get_coords((8,1)))
                 board[index1], self.board[index2] = self.board[index2], self.board[index1]
 
-        index1 = board.index(piece)
-        index2 = board.index(self.get_piece_from_coords(coords))
-        board[index1], board[index2] = board[index2], board[index1]
+        index1 = self.board.index(piece)
+        index2 = self.board.index(self.get_coords(coords))
+        self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
         position1 = piece.get_position()
         piece.position = coords
-        self.get_piece_from_coords(coords).position = position1
+        self.get_coords(coords).position = position1
 
     def take_piece(self, piece, coords, board):
         piece.set_untouched()
 
-        index1 = board.index(piece)
-        index2 = board.index(self.get_piece_from_coords(coords))
+        index1 = self.board.index(piece)
+        index2 = self.board.index(self.get_coords(coords))
         position1 = piece.get_position()
-        board[index1], board[index2] = board[index2], Piece(position1, "Entity", "neutral")
+        self.board[index1], self.board[index2] = self.board[index2], Piece(position1, "Entity", "neutral")
         piece.position == coords
 
     def check_checker(self):
         for i in self.board:
             if i.get_type() != "Entity":
-                for j in self.get_possible_positions(i):
-                    if self.get_piece_from_coords(j) == self.get_pieces_by_type("king", self.team):
+                for j in self.get_positions(i):
+                    if self.get_coords(j) == self.get_pieces_by_type("king", self.team):
                         return True
         
         return False
 
     def checkmate_checker(self):
         king = self.get_pieces_by_type("king", self.team)
-        for i in self.get_possible_positions(king):
-            for j in self.board:
-                if j.piece == True:
-                    for k in self.get_possible_positions(j):
-                        if i == k:
-                            return True
-        return False
+        king_coords = king.get_position
+        possible = self.get_positions(king)
+        possible2 = []
+        possible.append(king_coords)
+        enemy = [piece for piece in self.board if piece.piece == True and piece.get_colour != self.team]
+
+        
+        for i in possible:
+            match = False
+            for j in enemy:
+                if match:
+                    continue
+                for k in self.get_positions(j):
+                    if i == k:
+                        possible2.append(i)
+                        match = True
+
+        if len(possible2) == len(possible):
+            return True
+        else:
+            return False
+
+                
+
+        return True
 
     
 
