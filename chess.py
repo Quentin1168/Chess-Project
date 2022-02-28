@@ -80,10 +80,10 @@ class ChessBoard:
     The reason for this compact representation is for ease of transmitting the information to the server and other players.
     It also makes it easy for both players having different perspecitves of the board, where they are "facing" each other.
 
-    Client-side, the board is represented as a list of Entity and Piece objects.
+    Client-side, the board is represented as a list of Piece objects.
     """
     def __init__(self):
-        self.string = "rkbqlbkrpppppppp~~~~~~~~~~~~~~~~~~~~~~~~~~~~p~~~PPPPPPPPRKBQLBKR"
+        self.string = "rkbqlbkrpppppppp~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PPPPPPPPRKBQLBKR"
         self.board = []
         self.convert_from_string()
         self.selected = None
@@ -158,10 +158,10 @@ class ChessBoard:
     Parameter: type -> the type of the piece specified
     Returns: list of Piece objects of the type
     """
-    def get_pieces_by_type(self, type):
+    def get_pieces_by_type(self, type, colour):
         pieces = []
         for i in self.board:
-            if i.get_type() == type:
+            if i.get_type() == type and i.get_colour() == colour:
                 pieces.append(i)
 
         return pieces
@@ -206,15 +206,16 @@ class ChessBoard:
             possible.append((coords[0], coords[1]-1))
 
             # Conditions for the "Castling" special move.
-            if self.check == False and self.get_pieces_by_type("king")[0].get_untouched == True and self.get_pieces_by_type("rook")[0].get_untouched == True \
-                and self.get_pieces_by_type("rook")[1].get_untouched == True:
+            if self.check == False and self.get_pieces_by_type("king", self.team)[0].get_untouched == True and self.get_pieces_by_type("rook", self.team)[0].get_untouched == True \
+                and self.get_pieces_by_type("rook", self.team)[1].get_untouched == True:
                 possible + self.castling_possible_positions(coords)
 
         elif type == "pawn":
             if self.team != piece.get_colour():
-                if piece.get_untouched() == True:
-                    possible.append((coords[0], coords[1]-2))
-                possible.append((coords[0], coords[1]-1))
+                if self.get_piece_from_coords((coords[0], coords[1]-1).piece == False:
+                    possible.append((coords[0], coords[1]-1))
+                    if piece.get_untouched() == True:
+                        possible.append((coords[0], coords[1]-2))
 
                 #Check if the future coords are out of bounds or not
                 if 0 < coords[0]+1 < 9 and 0 < coords[1]-1 < 9 and self.get_piece_from_coords((coords[0]+1, coords[1]-1)).is_piece():
@@ -224,9 +225,10 @@ class ChessBoard:
                     if team[self.get_piece_from_coords((coords[0]-1, coords[1]-1)).get_colour()] == piece.get_colour():
                         possible.append((coords[0]-1, coords[1]-1))
             else:
-                if piece.get_untouched() == True:
-                    possible.append((coords[0], coords[1]+2))
-                possible.append((coords[0], coords[1]+1))
+                if self.get_piece_from_coords((coords[0], coords[1]+1)).piece == False:
+                    possible.append((coords[0], coords[1]+1))
+                    if piece.get_untouched() == True:
+                        possible.append((coords[0], coords[1]+2))
 
                 if 0 < coords[0]+1 < 9 and 0 < coords[1]+1 < 9 and self.get_piece_from_coords((coords[0]+1, coords[1]+1)).is_piece():
                     if team[self.get_piece_from_coords((coords[0]+1, coords[1]+1)).get_colour()] == piece.get_colour():
@@ -333,33 +335,52 @@ class ChessBoard:
 
         return possible
 
-    def move_piece(self, piece, coords):
+    def move_piece(self, piece, coords, board):
         piece.set_untouched()
         if piece.get_type() == "king":
             if piece.get_position()[0] - coords[0] < -1:
-                index1 = self.board.index(self.get_piece_from_coords((coords[0]-1, coords[1])))
-                index2 = self.board.index(self.get_piece_from_coords((1,1)))
+                index1 = board.index(self.get_piece_from_coords((coords[0]-1, coords[1])))
+                index2 = board.index(self.get_piece_from_coords((1,1)))
                 self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
             elif piece.get_position()[0] - coords[0] > 1:
-                index1 = self.board.index(self.get_piece_from_coords((coords[0]+1, coords[1])))
-                index2 = self.board.index(self.get_piece_from_coords((8,1)))
-                self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
+                index1 = board.index(self.get_piece_from_coords((coords[0]+1, coords[1])))
+                index2 = board.index(self.get_piece_from_coords((8,1)))
+                board[index1], self.board[index2] = self.board[index2], self.board[index1]
 
-        index1 = self.board.index(piece)
-        index2 = self.board.index(self.get_piece_from_coords(coords))
-        self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
+        index1 = board.index(piece)
+        index2 = board.index(self.get_piece_from_coords(coords))
+        board[index1], board[index2] = board[index2], board[index1]
         position1 = piece.get_position()
         piece.position = coords
         self.get_piece_from_coords(coords).position = position1
 
-    def take_piece(self, piece, coords):
+    def take_piece(self, piece, coords, board):
         piece.set_untouched()
 
-        index1 = self.board.index(piece)
-        index2 = self.board.index(self.get_piece_from_coords(coords))
+        index1 = board.index(piece)
+        index2 = board.index(self.get_piece_from_coords(coords))
         position1 = piece.get_position()
-        self.board[index1], self.board[index2] = self.board[index2], Piece(position1, "Entity", "neutral")
+        board[index1], board[index2] = board[index2], Piece(position1, "Entity", "neutral")
         piece.position == coords
+
+    def check_checker(self):
+        for i in self.board:
+            if i.get_type() != "Entity":
+                for j in self.get_possible_positions(i):
+                    if self.get_piece_from_coords(j) == self.get_pieces_by_type("king", self.team):
+                        return True
+        
+        return False
+
+    def checkmate_checker(self):
+        king = self.get_pieces_by_type("king", self.team)
+        for i in self.get_possible_positions(king):
+            for j in self.board:
+                if j.piece == True:
+                    for k in self.get_possible_positions(j):
+                        if i == k:
+                            return True
+        return False
 
     
 
