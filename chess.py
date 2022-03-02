@@ -80,10 +80,12 @@ class ChessBoard:
     The reason for this compact representation is for ease of transmitting the information to the server and other players.
     It also makes it easy for both players having different perspecitves of the board, where they are "facing" each other.
 
-    Client-side, the board is represented as a list of Piece objects.
+    Client-side, the board is represented as a list of Piece objects. From the Client's perspective, all the objects on the left corner
+    start from (8,1) and the objects on the right corner are (1,1). This is the same for every client, and the board just gets inverted
+    whenever it is sent.
     """
     def __init__(self):
-        self.string = "rkbqlbkrpppppppp~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PPPPPPPPRKBQLBKR"
+        self.string = "rkbqlbkrpppppppp~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PPPPPPPPRKBqLBKR"
         self.board = []
         self.convert_from_string()
         self.selected = None
@@ -104,6 +106,8 @@ class ChessBoard:
 
             if i.isupper():
                 colour = "white"
+            else:
+                colour = "black"
             if i.lower() == "r":
                 board.append(Piece((x,y), "rook", colour))
             elif i.lower() == "k":
@@ -189,12 +193,12 @@ class ChessBoard:
             possible.append((coords[0]-1, coords[1]-2))
             possible.append((coords[0]+1, coords[1]-2))
         elif type == "bishop":
-            possible + self.diagonal_expansion(piece)
+            possible += self.diagonal_expansion(piece)
         elif type == "rook":
-            possible + self.perpedicular_expansion(piece)
+            possible += self.perpedicular_expansion(piece)
         elif type == "queen":
-            possible + self.perpedicular_expansion(piece)
-            possible + self.diagonal_expansion(piece)
+            possible += self.perpedicular_expansion(piece)
+            possible += self.diagonal_expansion(piece)
         elif type == "king":
             possible.append((coords[0]+1, coords[1]+1))
             possible.append((coords[0]+1, coords[1]-1))
@@ -206,13 +210,14 @@ class ChessBoard:
             possible.append((coords[0], coords[1]-1))
 
             # Conditions for the "Castling" special move.
-            if self.check == False and self.get_pieces_by_type("king", self.team)[0].get_untouched == True and self.get_pieces_by_type("rook", self.team)[0].get_untouched == True \
-                and self.get_pieces_by_type("rook", self.team)[1].get_untouched == True:
-                possible + self.castling_possible_positions(coords)
-
+            
+            if self.check == False and self.get_pieces_by_type("king", self.team)[0].get_untouched() == True and \
+                self.get_pieces_by_type("rook", self.team)[0].get_untouched() == True and self.get_pieces_by_type("rook", self.team)[1].get_untouched() == True:
+                    possible += self.castling_possible_positions(coords)
+            
         elif type == "pawn":
             if self.team != piece.get_colour():
-                if self.get_coords((coords[0], coords[1]-1).piece == False:
+                if self.get_coords((coords[0], coords[1]-1)).piece == False:
                     possible.append((coords[0], coords[1]-1))
                     if piece.get_untouched() == True:
                         possible.append((coords[0], coords[1]-2))
@@ -253,25 +258,24 @@ class ChessBoard:
         possible = []
         castling_flag_left = True
         castling_flag_right = True
-        if self.team == "white":
+        if self.team == "black":
             for i in [2,3,4]:
-                if self.get_coords((i,8)).get_type() != "Entity":
+                if self.get_coords((i,1)).get_type() != "Entity":
                     castling_flag_left = False
             for i in [7,8]:
-                if self.get_coords((i,8)).get_type() != "Entity":
+                if self.get_coords((i,1)).get_type() != "Entity":
                     castling_flag_right = False
         else:
             for i in [2,3]:
-                if self.get_coords((i,8)).get_type() != "Entity":
-                    castling_flag_left = False
-            for i in [5,7,8]:
-                if self.get_coords((i,8)).get_type() != "Entity":
+                if self.get_coords((i,1)).get_type() != "Entity":
                     castling_flag_right = False
+            for i in [5,6,7]:
+                if self.get_coords((i,1)).get_type() != "Entity":
+                    castling_flag_left = False
         if castling_flag_left == True:
             possible.append((coords[0]+2, coords[1]))
         if castling_flag_right == True:
             possible.append((coords[0]-2, coords[1]))
-        
         return possible
 
     def perpedicular_expansion(self, piece):
@@ -335,9 +339,14 @@ class ChessBoard:
 
         return possible
 
+    """
+    Moves the specified piece to the specified coordinates, if the coordinates contain a piece there, take it.coords=
+    Also implements the castling special move, if get_positions allows for a castling move, then move 
+    """
     def move_piece(self, piece, coords):
         piece.set_untouched()
         if piece.get_type() == "king":
+            #since get_positions already checks if castling is possible, move_piece does not need to check
             if piece.get_position()[0] - coords[0] < -1:
                 index1 = self.board.index(self.get_coords((coords[0]-1, coords[1])))
                 index2 = self.board.index(self.get_coords((1,1)))
@@ -346,35 +355,31 @@ class ChessBoard:
                 index1 = self.board.index(self.get_coords((coords[0]+1, coords[1])))
                 index2 = self.board.index(self.get_coords((8,1)))
                 board[index1], self.board[index2] = self.board[index2], self.board[index1]
+            piece.position == coords
+        else:
+            index1 = self.board.index(piece)
+            index2 = self.board.index(self.get_coords(coords))
+            position1 = piece.get_position()
+            if self.getcoords(coords).piece == True:
+                self.board[index1], self.board[index2] = self.board[index2], Piece(position1, "Entity", "neutral")
+            else:
+                self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
+                self.get_coords(coords).position = position1
+            piece.position == coords
 
-        index1 = self.board.index(piece)
-        index2 = self.board.index(self.get_coords(coords))
-        self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
-        position1 = piece.get_position()
-        piece.position = coords
-        self.get_coords(coords).position = position1
-
-    def take_piece(self, piece, coords, board):
-        piece.set_untouched()
-
-        index1 = self.board.index(piece)
-        index2 = self.board.index(self.get_coords(coords))
-        position1 = piece.get_position()
-        self.board[index1], self.board[index2] = self.board[index2], Piece(position1, "Entity", "neutral")
-        piece.position == coords
 
     def check_checker(self):
         for i in self.board:
-            if i.get_type() != "Entity":
+            if i.get_type() != "Entity" and i.get_colour() != self.team:
                 for j in self.get_positions(i):
-                    if self.get_coords(j) == self.get_pieces_by_type("king", self.team):
+                    if j == self.get_pieces_by_type("king", self.team)[0].get_position():
                         return True
         
         return False
 
     def checkmate_checker(self):
-        king = self.get_pieces_by_type("king", self.team)
-        king_coords = king.get_position
+        king = self.get_pieces_by_type("king", self.team)[0]
+        king_coords = king.get_position()
         possible = self.get_positions(king)
         possible2 = []
         possible.append(king_coords)
@@ -398,7 +403,6 @@ class ChessBoard:
 
                 
 
-        return True
 
     
 
