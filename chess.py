@@ -63,7 +63,7 @@ class Piece():
         return self.untouched
 
     def set_untouched(self):
-        self.untoouched = False
+        self.untouched = False
     
     def is_piece(self):
         return self.piece
@@ -85,11 +85,13 @@ class ChessBoard:
     whenever it is sent.
     """
     def __init__(self):
-        self.string = "rkbqlbkrpppppppp~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PPPPPPPPRKBqLBKR"
+        #self.string = "rkbqlbkrpppppppp~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PPPPPPPPRKBqLBKR"
+        self.string = "~~~rr~l~~pqk~pp~~~~~~~~p~~p~~~~~p~~kKK~QP~~P~~~~~PP~~~PP~L~~RR~~"
         self.board = []
         self.convert_from_string()
         self.selected = None
         self.check = False
+        self.checkmate = False
         self.team = "white"
 
     """
@@ -140,7 +142,7 @@ class ChessBoard:
             else:
                 string += piece_to_string[(i.get_colour(), i.get_type())]
 
-        return string
+        self.string = string
 
     """
     Gets the specific Entity or Piece Object from the coordinates specified.
@@ -245,6 +247,7 @@ class ChessBoard:
 
         if len(possible) != 0:
             pruned_possible = []
+            
             for i in possible:
                 if 0 < i[0] < 9 and 0 < i[1] < 9 and self.get_coords(i).get_colour() != piece.get_colour():
                     pruned_possible.append(i)
@@ -253,7 +256,12 @@ class ChessBoard:
         
 
 
+    """
+    Gets all the possible positions if the castling special move is movable. Specified for both teams.
 
+    Parameters: coords -> the coordinates of the piece in question
+    Returns: the possible castling positions of the king
+    """
     def castling_possible_positions(self, coords):
         possible = []
         castling_flag_left = True
@@ -277,7 +285,13 @@ class ChessBoard:
         if castling_flag_right == True:
             possible.append((coords[0]-2, coords[1]))
         return possible
+    """
+    Used for the rook and the queen, for finding the possible horizontal and vertical positions those given pieces can go
+    before they come in contact with the border of the board or an enemy piece
 
+    Parameters: piece -> the piece in question
+    Returns: the possible perpendicular positons that the piece can move to
+    """
     def perpedicular_expansion(self, piece):
         possible = []
         coords = piece.get_position()
@@ -287,24 +301,43 @@ class ChessBoard:
                  and x < 9:
             x += 1
             possible.append((x, coords[1]))
+            if self.get_coords(coords).get_colour() != self.team \
+                and self.get_coords(coords).piece == True:
+                break
         x = coords[0]
         while self.get_coords(coords).get_colour() != self.team\
                 and x > 0:
             x -= 1
             possible.append((x, coords[1]))
+            if self.get_coords(coords).get_colour() != self.team \
+                and self.get_coords(coords).piece == True:
+                break
         x = coords[0]
         while self.get_coords(coords).get_colour() != self.team\
                 and y < 9:
             y += 1
             possible.append((coords[0], y))
+            if self.get_coords(coords).get_colour() != self.team \
+                and self.get_coords(coords).piece == True:
+                break
         y = coords[1]
         while self.get_coords(coords).get_colour() != self.team\
                 and y > 0:
             y -= 1
             possible.append((coords[0], y))
+            if self.get_coords(coords).get_colour() != self.team \
+                and self.get_coords(coords).piece == True:
+                break
         y = coords[1]
         return possible
 
+    """
+    Used for the bishop and the queen, for finding the possible diagonal positions those given pieces can go
+    before they come in contact with the border of the board or an enemy piece.
+
+    Parameters: piece -> the piece in question
+    Returns: the possible diagonal positons that the piece can move to
+    """
     def diagonal_expansion(self, piece):
         possible = []
         coords = piece.get_position()
@@ -315,6 +348,9 @@ class ChessBoard:
             x += 1
             y += 1
             possible.append((x,y))
+            if self.get_coords(coords).get_colour() != self.team \
+                and self.get_coords(coords).piece == True:
+                break
         x = coords[0]
         y = coords[1]
         while self.get_coords(coords).get_colour() != self.team\
@@ -322,6 +358,9 @@ class ChessBoard:
             x += 1
             y -= 1
             possible.append((x, y))
+            if self.get_coords(coords).get_colour() != self.team \
+                and self.get_coords(coords).piece == True:
+                break
         x = coords[0]
         y = coords[1]
         while self.get_coords(coords).get_colour() != self.team\
@@ -329,6 +368,9 @@ class ChessBoard:
             x -= 1
             y += 1
             possible.append((x, y))
+            if self.get_coords(coords).get_colour() != self.team \
+                and self.get_coords(coords).piece == True:
+                break
         x = coords[0]
         y = coords[1]
         while self.get_coords(coords).get_colour() != self.team\
@@ -336,38 +378,54 @@ class ChessBoard:
             x -= 1
             y -= 1
             possible.append((x, y))
+            if self.get_coords(coords).get_colour() != self.team \
+                and self.get_coords(coords).piece == True:
+                break
 
         return possible
 
     """
     Moves the specified piece to the specified coordinates, if the coordinates contain a piece there, take it.coords=
-    Also implements the castling special move, if get_positions allows for a castling move, then move 
+    Also implements the castling special move, if get_positions allows for a castling move.
+
+    Parameters: piece -> the piece in question
+                coords -> the coordinates the piece will move to
+
     """
     def move_piece(self, piece, coords):
-        piece.set_untouched()
-        if piece.get_type() == "king":
-            #since get_positions already checks if castling is possible, move_piece does not need to check
-            if piece.get_position()[0] - coords[0] < -1:
-                index1 = self.board.index(self.get_coords((coords[0]-1, coords[1])))
-                index2 = self.board.index(self.get_coords((1,1)))
-                self.self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
-            elif piece.get_position()[0] - coords[0] > 1:
-                index1 = self.board.index(self.get_coords((coords[0]+1, coords[1])))
-                index2 = self.board.index(self.get_coords((8,1)))
-                board[index1], self.board[index2] = self.board[index2], self.board[index1]
-            piece.position == coords
-        else:
-            index1 = self.board.index(piece)
-            index2 = self.board.index(self.get_coords(coords))
-            position1 = piece.get_position()
-            if self.getcoords(coords).piece == True:
-                self.board[index1], self.board[index2] = self.board[index2], Piece(position1, "Entity", "neutral")
+        if coords in self.get_positions(piece):
+            print("bruh")
+            if piece.get_type() == "king" and piece.get_untouched() == True:
+                #since get_positions already checks if castling is possible, move_piece does not need to check
+                if piece.get_position()[0] - coords[0] < -1:
+                    index1 = self.board.index(self.get_coords((coords[0]-1, coords[1])))
+                    index2 = self.board.index(self.get_coords((1,1)))
+                    self.self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
+                elif piece.get_position()[0] - coords[0] > 1:
+                    index1 = self.board.index(self.get_coords((coords[0]+1, coords[1])))
+                    index2 = self.board.index(self.get_coords((8,1)))
+                    self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
+                piece.position = coords
             else:
-                self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
-                self.get_coords(coords).position = position1
-            piece.position == coords
+                print("bruh")
+                index1 = self.board.index(piece)
+                index2 = self.board.index(self.get_coords(coords))
+                position1 = piece.get_position()
+                if self.get_coords(coords).piece == True:
+                    self.board[index1], self.board[index2] = self.board[index2], Piece(position1, "Entity", "neutral")
+                else:
+                    self.board[index1], self.board[index2] = self.board[index2], self.board[index1]
+                    self.get_coords(coords).position = position1
+                piece.position = coords
+            piece.set_untouched()
+            self.convert_to_string()
+            self.post_move_analysis()
 
+    """
+    Checks if this team is in check
 
+    Returns: True/False depending if the team is in check
+    """
     def check_checker(self):
         for i in self.board:
             if i.get_type() != "Entity" and i.get_colour() != self.team:
@@ -377,14 +435,16 @@ class ChessBoard:
         
         return False
 
-    def checkmate_checker(self):
-        king = self.get_pieces_by_type("king", self.team)[0]
-        king_coords = king.get_position()
-        possible = self.get_positions(king)
-        possible2 = []
-        possible.append(king_coords)
-        enemy = [piece for piece in self.board if piece.piece == True and piece.get_colour != self.team]
+    """
+    Checks if this team is in checkmate
 
+    Returns: True/False depending if the team is in checkmate
+    """
+    def checkmate_checker(self):
+        possible = self.get_positions(self.get_pieces_by_type("king", self.team)[0])
+        possible2 = []
+        possible.append(self.get_pieces_by_type("king", self.team)[0].get_position())
+        enemy = [piece for piece in self.board if piece.piece == True and piece.get_colour() != self.team]
         
         for i in possible:
             match = False
@@ -395,11 +455,25 @@ class ChessBoard:
                     if i == k:
                         possible2.append(i)
                         match = True
+                        break
 
         if len(possible2) == len(possible):
             return True
         else:
             return False
+
+    """
+    Checks for check and checkmate, done after the client moves
+    If the client was in check and is still in check after the move, declare checkmate
+    If the checkmate checker returns True, declare checkmate
+    """
+    def post_move_analysis(self):
+        if self.check == True and self.check_checker() == True:
+            self.checkmate = True
+        elif self.check_checker() == True and self.check == False:
+            self.check = True
+        elif self.checkmate_checker() == True:
+            self.checkmate = True
 
                 
 
