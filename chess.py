@@ -451,7 +451,6 @@ class ChessBoard:
         for i in board:
             if i.get_type() != "Entity" and i.get_colour() != self.team:
                 for j in self.get_positions(i, board, prune = False):
-                    print(i,self.get_pieces_by_type("king", self.team, board)[0].get_position(), j)
                     if j == self.get_pieces_by_type("king", self.team, board)[0].get_position():
                         return True
         
