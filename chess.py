@@ -88,13 +88,12 @@ class ChessBoard:
         #self.string = "rkbqlbkrpppppppp~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PPPPPPPPRKBqLBKR"
         self.string = "~~~rr~l~~pqk~pp~~~~~~~~p~~p~~~~~p~~kKK~QP~~P~~~~~PP~~~PP~L~~rR~~"
         self.board = []
-        self.convert_from_string()
+        self.team = "white"
         self.selected = None
         self.check = False
         self.checkmate = False
-        self.team = "white"
         self.pieces = []
-
+        self.convert_from_string()
     """
     Convert the string to a list of Entity and Piece Objects
     """
@@ -105,9 +104,6 @@ class ChessBoard:
         type = "Entity"
         board = []
         for i in self.string:
-            
-            
-
             if i.isupper():
                 colour = "white"
             else:
@@ -127,7 +123,6 @@ class ChessBoard:
             else:
                 type = "neutral"
                 colour = "neutral"
-            
             if colour == self.team:
                 self.pieces.append(Piece((x,y), type, colour))
             board.append(Piece((x,y), type, colour))
@@ -152,6 +147,17 @@ class ChessBoard:
                 string += piece_to_string[(i.get_colour(), i.get_type())]
 
         self.string = string
+
+    def list_from_board(self, board = None):
+        pieces = []
+        if board == None:
+            board = self.board
+
+        for i in board:
+            if i.colour == self.team:
+                pieces.append(i)
+
+        return pieces
 
     """
     Gets the specific Entity or Piece Object from the coordinates specified.
@@ -418,33 +424,35 @@ class ChessBoard:
 
     """
     def move_piece(self, piece, coords, board = None):
+        n_piece = piece
         if board == None:
             board = self.board
         #if coords in self.get_positions(piece, board):
-        if piece.get_type() == "king" and piece.get_untouched() == True and \
-            (piece.get_position()[0] - coords[0] < -1 or piece.get_position()[0] - coords[0] > 1):
+        if n_piece.get_type() == "king" and n_piece.get_untouched() == True and \
+            (n_piece.get_position()[0] - coords[0] < -1 or n_piece.get_position()[0] - coords[0] > 1):
             #since get_positions already checks if castling is possible, move_piece does not need to check
-            if piece.get_position()[0] - coords[0] < -1:
+            if n_piece.get_position()[0] - coords[0] < -1:
                 index1 = board.index(self.get_piece((coords[0]-1, coords[1])))
                 index2 = board.index(self.get_piece((1,1)))
                 board[index1], board[index2] = board[index2], board[index1]
-            elif piece.get_position()[0] - coords[0] > 1:
+            elif n_piece.get_position()[0] - coords[0] > 1:
                 index1 = board.index(self.get_piece((coords[0]+1, coords[1])))
                 index2 = board.index(self.get_piece((8,1)))
                 board[index1], board[index2] = board[index2], board[index1]
-            piece.position = coords
+
+            n_piece.position = coords
         else:
-            index1 = board.index(piece)
+            index1 = board.index(n_piece)
             index2 = board.index(self.get_piece(coords, board))
-            position1 = piece.get_position()
+            position1 = n_piece.get_position()
             if self.get_piece(coords, board).piece == True:
                 board[index1], board[index2] = board[index2], Piece(position1, "Entity", "neutral")
             else:
                 board[index1], board[index2] = board[index2], board[index1]
                 self.get_piece(coords, board).position = position1
-            piece.position = coords
+            n_piece.position = coords
         
-        return board, True
+        return board, self.list_from_board(board), True
         
 
     """
@@ -481,10 +489,18 @@ class ChessBoard:
     """
     def checkmate_checker(self):
         board = self.board
-        king = self.get_pieces_by_type("king", self.team, board)[0]
-        for i in board:
-            if i.team == self.team
-
+        pieces = self.pieces
+        checkmate = True
+        for i in pieces:
+            moves = self.get_positions(i, board)
+            for j in moves:
+                print(i, j)
+                new_board = self.move_piece(i, j, board)[0]
+                self.get_piece
+                if self.check_checker(new_board) == False:
+                    checkmate = False
+         
+        return checkmate
          
             
    
