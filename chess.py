@@ -93,6 +93,7 @@ class ChessBoard:
         self.check = False
         self.checkmate = False
         self.team = "white"
+        self.pieces = []
 
     """
     Convert the string to a list of Entity and Piece Objects
@@ -101,6 +102,7 @@ class ChessBoard:
         x = 8
         y = 8
         colour = "black"
+        type = "Entity"
         board = []
         for i in self.string:
             
@@ -111,19 +113,24 @@ class ChessBoard:
             else:
                 colour = "black"
             if i.lower() == "r":
-                board.append(Piece((x,y), "rook", colour))
+                type = "rook"
             elif i.lower() == "k":
-                board.append(Piece((x,y), "knight", colour))
+                type = "knight"
             elif i.lower() == "b":
-                board.append(Piece((x,y), "bishop", colour))
+                type = "bishop"
             elif i.lower() == "q":
-                board.append(Piece((x,y), "queen", colour))
+                type = "queen"
             elif i.lower() == "l":
-                board.append(Piece((x,y), "king", colour))
+                type = "king"
             elif i.lower() == "p":
-                board.append(Piece((x,y), "pawn", colour))
+                type = "pawn"
             else:
-                board.append(Piece((x,y), "Entity", "neutral"))
+                type = "neutral"
+                colour = "neutral"
+            
+            if colour == self.team:
+                self.pieces.append(Piece((x,y), type, colour))
+            board.append(Piece((x,y), type, colour))
             x -= 1
 
             if x < 1:
@@ -436,8 +443,8 @@ class ChessBoard:
                 board[index1], board[index2] = board[index2], board[index1]
                 self.get_piece(coords, board).position = position1
             piece.position = coords
-        piece.set_untouched()
-        return board
+        
+        return board, True
         
 
     """
@@ -475,10 +482,8 @@ class ChessBoard:
     def checkmate_checker(self):
         board = self.board
         king = self.get_pieces_by_type("king", self.team, board)[0]
-        possible = self.get_positions(king, board)
-        if len(possible) == 0:
-            return True
-        return False
+        for i in board:
+            if i.team == self.team
 
          
             
