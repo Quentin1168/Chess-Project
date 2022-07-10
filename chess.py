@@ -1,5 +1,6 @@
 from cmath import pi
 from PIL import Image, ImageTk
+import copy
 
 piece_to_string = {
     ("black", "rook"): "r",
@@ -69,7 +70,7 @@ class Piece():
         return self.piece
     
     def __repr__(self):
-        return "Piece(" + str(self.position) + " ," + self.type + " ," + self.colour + " )"
+        return "Piece(" + str(self.position) + ", " + self.type + ", " + self.colour + ")"
 
 """
 ChessBoard class covers the board and the tiles on it
@@ -86,7 +87,7 @@ class ChessBoard:
     """
     def __init__(self):
         #self.string = "rkbqlbkrpppppppp~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PPPPPPPPRKBqLBKR"
-        self.string = "~~~rr~l~~pqk~pp~~~~~~~~p~~p~~~~~p~~kKK~QP~~P~~~~~PP~~~PP~L~~rR~~"
+        self.string = "~~~rr~l~~pqk~pp~~~~~~~~p~~p~~~~~p~~kKK~QP~~P~~~~PPP~~~PP~L~RrR~~"
         self.board = []
         self.team = "white"
         self.selected = None
@@ -121,7 +122,7 @@ class ChessBoard:
             elif i.lower() == "p":
                 type = "pawn"
             else:
-                type = "neutral"
+                type = "Entity"
                 colour = "neutral"
             if colour == self.team:
                 self.pieces.append(Piece((x,y), type, colour))
@@ -146,7 +147,23 @@ class ChessBoard:
             else:
                 string += piece_to_string[(i.get_colour(), i.get_type())]
 
-        self.string = string
+        return string
+
+    def convert_to_readable(self, board = None):
+        if board == None:
+            board = self.board
+        string = ""
+        count = 1
+        for i in board:
+            if (count-1)%8 == 0:
+                string+= "\n"
+            if i.get_type() == "Entity":
+                string += "~"
+            else:
+                string += piece_to_string[(i.get_colour(), i.get_type())]
+            count += 1
+
+        return string
 
     def list_from_board(self, board = None):
         pieces = []
@@ -247,6 +264,7 @@ class ChessBoard:
                 #Check if the future coords are out of bounds or not
                 if 0 < coords[0]+1 < 9 and 0 < coords[1]-1 < 9 and self.get_piece((coords[0]+1, coords[1]-1), board).is_piece():
                     if team[self.get_piece((coords[0]+1, coords[1]-1), board).get_colour()] == piece.get_colour():
+                        print()
                         possible.append((coords[0]+1, coords[1]-1))
                 if 0 < coords[0]-1 < 9 and 0 < coords[1]-1 < 9 and self.get_piece((coords[0]-1, coords[1]-1), board).is_piece():
                     if team[self.get_piece((coords[0]-1, coords[1]-1), board).get_colour()] == piece.get_colour():
@@ -331,7 +349,6 @@ class ChessBoard:
         while x < 9 and self.get_piece((x,y), board).get_colour() != piece.get_colour():
             
             possible.append((x, coords[1]))
-            
             if self.get_piece((x,y), board).get_colour() != piece.get_colour() \
                 and self.get_piece((x,y), board).piece == True:
                 break
@@ -425,34 +442,42 @@ class ChessBoard:
     """
     def move_piece(self, piece, coords, board = None):
         n_piece = piece
+        print(n_piece)
         if board == None:
             board = self.board
+        sim = copy.deepcopy(board)
         #if coords in self.get_positions(piece, board):
         if n_piece.get_type() == "king" and n_piece.get_untouched() == True and \
             (n_piece.get_position()[0] - coords[0] < -1 or n_piece.get_position()[0] - coords[0] > 1):
             #since get_positions already checks if castling is possible, move_piece does not need to check
+            
             if n_piece.get_position()[0] - coords[0] < -1:
-                index1 = board.index(self.get_piece((coords[0]-1, coords[1])))
-                index2 = board.index(self.get_piece((1,1)))
-                board[index1], board[index2] = board[index2], board[index1]
+                index1 = sim.index(self.get_piece((coords[0]-1, coords[1])))
+                index2 = sim.index(self.get_piece((1,1)))
+                sim[index1], sim[index2] = sim[index2], sim[index1]
             elif n_piece.get_position()[0] - coords[0] > 1:
-                index1 = board.index(self.get_piece((coords[0]+1, coords[1])))
-                index2 = board.index(self.get_piece((8,1)))
-                board[index1], board[index2] = board[index2], board[index1]
+                index1 = sim.index(self.get_piece((coords[0]+1, coords[1])))
+                index2 = sim.index(self.get_piece((8,1)))
+                sim[index1], sim[index2] = sim[index2], sim[index1]
 
-            n_piece.position = coords
+            
         else:
-            index1 = board.index(n_piece)
-            index2 = board.index(self.get_piece(coords, board))
+
+            index1 = sim.index(self.get_piece(n_piece.position))
+            print(index1)
+            index2 = sim.index(self.get_piece(coords, sim))
             position1 = n_piece.get_position()
-            if self.get_piece(coords, board).piece == True:
-                board[index1], board[index2] = board[index2], Piece(position1, "Entity", "neutral")
+            if self.get_piece(coords, sim).piece == True:
+                sim[index1], sim[index2] = sim[index2], Piece(position1, "Entity", "neutral")
             else:
-                board[index1], board[index2] = board[index2], board[index1]
-                self.get_piece(coords, board).position = position1
+                sim[index1], sim[index2] = sim[index2], sim[index1]
+                self.get_piece(coords, sim).position = position1
             n_piece.position = coords
+
         
-        return board, self.list_from_board(board), True
+        print(self.board)
+        print(sim)
+        #return sim, self.list_from_board(sim), True
         
 
     """
@@ -464,9 +489,12 @@ class ChessBoard:
         if board == None:
             board = self.board
         for i in board:
-            if i.get_type() != "Entity" and i.get_colour() != self.team:
+            
+            if i.get_type() != "Entity" and (i.get_colour() != self.team and i.get_colour() != "neutral"):
                 for j in self.get_positions(i, board, prune = False):
+                    
                     if j == self.get_pieces_by_type("king", self.team, board)[0].get_position():
+                        print(i, j)
                         return True
         
         return False
@@ -495,9 +523,11 @@ class ChessBoard:
             moves = self.get_positions(i, board)
             for j in moves:
                 print(i, j)
-                new_board = self.move_piece(i, j, board)[0]
-                self.get_piece
+                new_board = self.move_piece(self.get_piece(i.get_position(), board), j, board)[0]
+                
+                print(self.convert_to_readable(new_board))
                 if self.check_checker(new_board) == False:
+                    print("False")
                     checkmate = False
          
         return checkmate
