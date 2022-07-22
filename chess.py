@@ -1,4 +1,5 @@
 from cmath import pi
+from operator import index
 from PIL import Image, ImageTk
 import copy
 
@@ -51,6 +52,11 @@ class Piece():
     def get_position(self):
         return self.position
 
+    def set_position(self, position):
+        print(self.position, position)
+        self.position = position
+        print(self.position)
+
     def get_type(self):
         return self.type
     
@@ -71,6 +77,9 @@ class Piece():
     
     def __repr__(self):
         return "Piece(" + str(self.position) + ", " + self.type + ", " + self.colour + ")"
+    
+    def __hash__(self) -> int:
+        return hash((self.position, self.type, self.colour, self.untouched))
 
 """
 ChessBoard class covers the board and the tiles on it
@@ -95,6 +104,17 @@ class ChessBoard:
         self.checkmate = False
         self.pieces = []
         self.convert_from_string()
+
+    def hash_index(self, code, board = None):
+        if board == None:
+            board = self.board
+        count = 0
+        for i in board:
+            if hash(i) == code:
+                return count
+            count += 1
+
+
     """
     Convert the string to a list of Entity and Piece Objects
     """
@@ -442,7 +462,6 @@ class ChessBoard:
     """
     def move_piece(self, piece, coords, board = None):
         n_piece = piece
-        print(n_piece)
         if board == None:
             board = self.board
         sim = copy.deepcopy(board)
@@ -463,21 +482,21 @@ class ChessBoard:
             
         else:
 
-            index1 = sim.index(self.get_piece(n_piece.position))
-            print(index1)
-            index2 = sim.index(self.get_piece(coords, sim))
+            index1 = self.hash_index(hash(n_piece), sim)
+            print(self.get_piece(coords, sim))
+            index2 = self.hash_index(hash(self.get_piece(coords, sim)), sim)
+            print(index1, index2)
             position1 = n_piece.get_position()
             if self.get_piece(coords, sim).piece == True:
-                sim[index1], sim[index2] = sim[index2], Piece(position1, "Entity", "neutral")
+                sim[index1], sim[index2] = sim[index2], Piece(coords, "Entity", "neutral")
             else:
                 sim[index1], sim[index2] = sim[index2], sim[index1]
-                self.get_piece(coords, sim).position = position1
-            n_piece.position = coords
-
+                sim[index1].set_position(position1)
+            
+            sim[index2].set_position(coords)
         
-        print(self.board)
-        print(sim)
-        #return sim, self.list_from_board(sim), True
+        
+        return sim, self.list_from_board(sim), True
         
 
     """
@@ -524,7 +543,7 @@ class ChessBoard:
             for j in moves:
                 print(i, j)
                 new_board = self.move_piece(self.get_piece(i.get_position(), board), j, board)[0]
-                
+                print(self.convert_to_readable(board))
                 print(self.convert_to_readable(new_board))
                 if self.check_checker(new_board) == False:
                     print("False")
