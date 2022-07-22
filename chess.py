@@ -53,9 +53,7 @@ class Piece():
         return self.position
 
     def set_position(self, position):
-        print(self.position, position)
         self.position = position
-        print(self.position)
 
     def get_type(self):
         return self.type
@@ -96,7 +94,7 @@ class ChessBoard:
     """
     def __init__(self):
         #self.string = "rkbqlbkrpppppppp~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~PPPPPPPPRKBqLBKR"
-        self.string = "~~~rr~l~~pqk~pp~~~~~~~~p~~p~~~~~p~~kKK~QP~~P~~~~PPP~~~PP~L~RrR~~"
+        self.string = "~~~rr~l~~pqk~pp~~~~~~~~p~~p~~~~~p~~kKK~QP~~P~~~~PPP~~~PP~L~r~~~~"
         self.board = []
         self.team = "white"
         self.selected = None
@@ -284,7 +282,6 @@ class ChessBoard:
                 #Check if the future coords are out of bounds or not
                 if 0 < coords[0]+1 < 9 and 0 < coords[1]-1 < 9 and self.get_piece((coords[0]+1, coords[1]-1), board).is_piece():
                     if team[self.get_piece((coords[0]+1, coords[1]-1), board).get_colour()] == piece.get_colour():
-                        print()
                         possible.append((coords[0]+1, coords[1]-1))
                 if 0 < coords[0]-1 < 9 and 0 < coords[1]-1 < 9 and self.get_piece((coords[0]-1, coords[1]-1), board).is_piece():
                     if team[self.get_piece((coords[0]-1, coords[1]-1), board).get_colour()] == piece.get_colour():
@@ -483,12 +480,10 @@ class ChessBoard:
         else:
 
             index1 = self.hash_index(hash(n_piece), sim)
-            print(self.get_piece(coords, sim))
             index2 = self.hash_index(hash(self.get_piece(coords, sim)), sim)
-            print(index1, index2)
             position1 = n_piece.get_position()
             if self.get_piece(coords, sim).piece == True:
-                sim[index1], sim[index2] = sim[index2], Piece(coords, "Entity", "neutral")
+                sim[index1], sim[index2] = Piece(position1, "Entity", "neutral"), sim[index1], 
             else:
                 sim[index1], sim[index2] = sim[index2], sim[index1]
                 sim[index1].set_position(position1)
@@ -513,7 +508,6 @@ class ChessBoard:
                 for j in self.get_positions(i, board, prune = False):
                     
                     if j == self.get_pieces_by_type("king", self.team, board)[0].get_position():
-                        print(i, j)
                         return True
         
         return False
@@ -541,12 +535,8 @@ class ChessBoard:
         for i in pieces:
             moves = self.get_positions(i, board)
             for j in moves:
-                print(i, j)
                 new_board = self.move_piece(self.get_piece(i.get_position(), board), j, board)[0]
-                print(self.convert_to_readable(board))
-                print(self.convert_to_readable(new_board))
                 if self.check_checker(new_board) == False:
-                    print("False")
                     checkmate = False
          
         return checkmate
